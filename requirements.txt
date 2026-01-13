@@ -1,0 +1,25 @@
+# Bot framework
+aiogram==3.15.0
+aiohttp==3.10.11
+
+# Database
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+
+# Utils
+python-dotenv==1.0.1
+pydantic==2.10.4
+pydantic-settings==2.6.1
+
+# Redis for FSM
+redis==5.2.0
+
+# For calculations
+# numpy is optional, using only built-in Decimal
+
+# Development
+pytest==8.3.4
+pytest-asyncio==0.24.0
+black==24.10.0
+flake8==7.1.1
