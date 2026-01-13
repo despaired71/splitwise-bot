@@ -13,6 +13,8 @@ from bot.config.settings import settings
 from bot.database.session import sessionmanager
 from bot.middlewares.database import DatabaseMiddleware
 from bot.middlewares.auth import AuthMiddleware
+from bot.middlewares.admin import AdminMiddleware
+
 
 # Import handlers (will create these next)
 # from bot.handlers import start, event, participant, family, expense, calculation
@@ -88,6 +90,8 @@ async def main():
     dp.callback_query.middleware(DatabaseMiddleware())
     dp.message.middleware(AuthMiddleware())
     dp.callback_query.middleware(AuthMiddleware())
+    dp.message.middleware(AdminMiddleware())
+    dp.callback_query.middleware(AdminMiddleware())
 
     # Register handlers
     from bot.handlers import start, event, participant, family, expense, calculation, admin

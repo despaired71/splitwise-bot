@@ -12,16 +12,16 @@ class EventStatus(str, Enum):
 
 class ParticipantType(str, Enum):
     """Participant types."""
-    TELEGRAM_CHAT = "telegram_chat"      # User in the chat
-    TELEGRAM_EXTERNAL = "telegram_external"  # Telegram user not in chat
-    EXTERNAL = "external"                 # Non-Telegram user
+    TELEGRAM_CHAT = "telegram_chat"
+    TELEGRAM_EXTERNAL = "telegram_external"
+    EXTERNAL = "external"
 
 
 class SplitType(str, Enum):
     """How expense is split."""
-    EQUAL = "equal"        # Split equally among all
-    CUSTOM = "custom"      # Custom amounts/percentages
-    SPECIFIC = "specific"  # Specific people/families
+    EQUAL = "equal"
+    CUSTOM = "custom"
+    SPECIFIC = "specific"
 
 
 class AuditAction(str, Enum):
@@ -74,15 +74,37 @@ CB_CALCULATE = "calc"
 CB_CONFIRM = "confirm"
 CB_CANCEL = "cancel"
 
-# Messages
+
+# ===== ДОБАВЛЕНО: Класс Messages =====
+class Messages:
+    """User-facing messages."""
+
+    # Event messages
+    EVENT_NAME_PROMPT = "📝 Введите название мероприятия:"
+    EVENT_DESCRIPTION_PROMPT = (
+        "📋 Введите описание мероприятия (необязательно):\n\n"
+        "Или нажмите 'Пропустить'"
+    )
+    NO_EVENTS = "❌ У вас нет мероприятий.\nСоздайте новое с помощью /new_event"
+
+    # Participant messages
+    PARTICIPANT_TYPE_PROMPT = "👤 Как добавить участника?"
+
+    # Error messages
+    ERROR_NO_EVENT = "❌ Мероприятие не найдено"
+    ERROR_NO_PERMISSION = "❌ У вас нет прав для этого действия"
+    ERROR_DATABASE = "❌ Ошибка базы данных"
+
+
+# Legacy messages (для обратной совместимости)
 MSG_WELCOME = """
 👋 Привет! Я бот для учета расходов в компании.
 
 Я помогу:
-• Создавать мероприятия и добавлять участников
-• Учитывать расходы каждого
-• Объединять людей в семьи
-• Рассчитывать, кто кому сколько должен
+- Создавать мероприятия и добавлять участников
+- Учитывать расходы каждого
+- Объединять людей в семьи
+- Рассчитывать, кто кому сколько должен
 
 Используй /help для списка команд.
 """
@@ -116,7 +138,7 @@ MSG_HELP = """
 /my_debts - мои долги
 """
 
-# Error messages
+# Error messages (legacy)
 ERR_NO_EVENT = "❌ Мероприятие не найдено"
 ERR_NO_PERMISSION = "❌ У вас нет прав для этого действия"
 ERR_INVALID_AMOUNT = "❌ Некорректная сумма"

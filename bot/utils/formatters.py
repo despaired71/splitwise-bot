@@ -1,14 +1,20 @@
 """Formatters for displaying data in messages."""
 
 from decimal import Decimal
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from datetime import datetime
 
 from bot.database.models import Event, Participant, Expense, Family
 
 
-def format_event_info(event: Event) -> str:
-    """Format event information for display."""
+def format_event_info(event: Event, participants_count: int = 0) -> str:
+    """
+    Format event information for display.
+
+    Args:
+        event: Event object
+        participants_count: Number of active participants (must be provided)
+    """
     status_emoji = {
         "active": "🟢",
         "closed": "🔴",
@@ -27,15 +33,41 @@ def format_event_info(event: Event) -> str:
     if event.closed_at:
         message += f"<b>Закрыто:</b> {event.closed_at.strftime('%d.%m.%Y %H:%M')}\n"
 
-    # Statistics
-    active_participants = len([p for p in event.participants if p.is_active])
-    message += f"\n<b>Участников:</b> {active_participants}\n"
-    message += f"<b>Семей:</b> {len(event.families)}\n"
+    # Statistics (using provided count)
+    message += f"\n<b>Участников:</b> {participants_count}\n"
 
-    active_expenses = [e for e in event.expenses if not e.is_deleted]
-    total_amount = sum(e.amount for e in active_expenses)
-    message += f"<b>Расходов:</b> {len(active_expenses)}\n"
-    message += f"<b>Всего потрачено:</b> {total_amount:.2f} ₽\n"
+    return message
+
+
+def format_event_list(events_with_counts: List[Tuple[Event, int]]) -> str:
+    """
+    Format list of events with participant counts.
+
+    Args:
+        events_with_counts: List of (Event, participant_count) tuples
+    """
+    if not events_with_counts:
+        return "❌ У вас нет мероприятий"
+
+    message = "<b>📋 Ваши мероприятия:</b>\n\n"
+
+    status_emoji = {
+        "active": "🟢",
+        "closed": "🔴",
+        "archived": "⚫"
+    }
+
+    for i, (event, count) in enumerate(events_with_counts, 1):
+        emoji = status_emoji.get(event.status, '⚪')
+        message += f"{i}. {emoji} <b>{event.name}</b>\n"
+        message += f"   👥 Участников: {count}\n"
+        message += f"   📅 {event.created_at.strftime('%d.%m.%Y')}\n"
+
+        if event.description:
+            desc = truncate_text(event.description, 50)
+            message += f"   💬 {desc}\n"
+
+        message += "\n"
 
     return message
 

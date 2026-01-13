@@ -10,7 +10,7 @@ from bot.services.event_service import EventService
 from bot.services.participant_service import ParticipantService
 from bot.keyboards.inline import (
     get_events_keyboard,
-    get_event_actions_keyboard
+    get_event_actions_keyboard,
 )
 from bot.keyboards.reply import get_cancel_keyboard
 from bot.utils.formatters import format_event_info, format_event_list
@@ -86,9 +86,13 @@ async def cmd_list_events(message: Message, session: AsyncSession):
         events_with_counts.append((event, len(participants)))
 
     text = format_event_list(events_with_counts)
+
+    # Преобразуем в формат для клавиатуры: (event_id, event_name)
+    events_data = [(e.id, e.name) for e, count in events_with_counts]
+
     await message.answer(
         text,
-        reply_markup=get_events_keyboard(events),
+        reply_markup=get_events_keyboard(events_data),
     )
 
 
@@ -102,9 +106,11 @@ async def cmd_event_info(message: Message, session: AsyncSession):
         await message.answer(Messages.NO_EVENTS)
         return
 
+    events_data = [(e.id, e.name) for e in events]
+
     await message.answer(
         "Выберите мероприятие:",
-        reply_markup=get_events_keyboard(events, action="info"),
+        reply_markup=get_events_keyboard(events_data, action="info"),
     )
 
 
@@ -145,9 +151,11 @@ async def cmd_close_event(message: Message, session: AsyncSession):
         await message.answer("У вас нет активных мероприятий")
         return
 
+    events_data = [(e.id, e.name) for e in events]
+
     await message.answer(
         "Выберите мероприятие для закрытия:",
-        reply_markup=get_events_keyboard(events, action="close"),
+        reply_markup=get_events_keyboard(events_data, action="close"),
     )
 
 
@@ -157,7 +165,7 @@ async def close_event(callback: CallbackQuery, session: AsyncSession):
     event_id = int(callback.data.split(":")[1])
 
     event_service = EventService(session)
-    event = await event_service.close_event(event_id)
+    event = await event_service.close_event(event_id, callback.from_user.id)
 
     if not event:
         await callback.answer("Мероприятие не найдено", show_alert=True)
