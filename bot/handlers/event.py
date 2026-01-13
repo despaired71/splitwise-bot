@@ -10,9 +10,9 @@ from bot.services.event_service import EventService
 from bot.services.participant_service import ParticipantService
 from bot.keyboards.inline import (
     get_events_keyboard,
-    get_event_actions_keyboard,
-    get_cancel_keyboard,
+    get_event_actions_keyboard
 )
+from bot.keyboards.reply import get_cancel_keyboard
 from bot.utils.formatters import format_event_info, format_event_list
 from bot.utils.constants import Messages, EventStatus
 
