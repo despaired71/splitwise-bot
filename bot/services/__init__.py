@@ -6,6 +6,7 @@ from bot.services.family_service import FamilyService
 from bot.services.expense_service import ExpenseService
 from bot.services.calculation_service import CalculationService
 from bot.services.notification_service import NotificationService
+from bot.services.admin_service import AdminService
 
 __all__ = [
     "EventService",
@@ -13,5 +14,6 @@ __all__ = [
     "FamilyService",
     "ExpenseService",
     "CalculationService",
-    "NotificationService"
+    "NotificationService",
+    "AdminService"
 ]

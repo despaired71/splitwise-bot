@@ -90,9 +90,10 @@ async def main():
     dp.callback_query.middleware(AuthMiddleware())
 
     # Register handlers
-    from bot.handlers import start, event, participant, family, expense, calculation
+    from bot.handlers import start, event, participant, family, expense, calculation, admin
 
     dp.include_router(start.router)
+    dp.include_router(admin.router)  # Admin router first for priority
     dp.include_router(event.router)
     dp.include_router(participant.router)
     dp.include_router(family.router)

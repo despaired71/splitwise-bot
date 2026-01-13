@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, alias="DEBUG")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
+    # Admin user IDs (comma-separated)
+    admin_user_ids: str = Field(default="", alias="ADMIN_USER_IDS")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -43,6 +46,12 @@ class Settings(BaseSettings):
     def redis_url(self) -> str:
         """Construct Redis URL."""
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
+
+    @property
+    def is_admin(self) -> callable:
+        """Check if user_id is admin."""
+        admin_ids = [int(uid.strip()) for uid in self.admin_user_ids.split(",") if uid.strip()]
+        return lambda user_id: user_id in admin_ids
 
 
 # Global settings instance

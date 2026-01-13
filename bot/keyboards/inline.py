@@ -183,6 +183,29 @@ def get_yes_no_keyboard(action: str, data: str = "") -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+def get_admin_menu_keyboard() -> InlineKeyboardMarkup:
+    """Create admin menu keyboard."""
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="📊 Статистика", callback_data="admin:stats")
+    builder.button(text="📋 Все мероприятия", callback_data="admin:events")
+    builder.button(text="🏆 Топ по расходам", callback_data="admin:top")
+    builder.button(text="📝 Активность", callback_data="admin:activity")
+    builder.button(text="❓ Помощь", callback_data="admin:help")
+
+    builder.adjust(1)  # All buttons in separate rows
+    return builder.as_markup()
+
+
+def get_admin_back_keyboard() -> InlineKeyboardMarkup:
+    """Create back to admin menu keyboard."""
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="◀️ Назад в меню", callback_data="admin:menu")
+
+    return builder.as_markup()
+
+
 def get_confirmation_keyboard(action: str, item_id: int) -> InlineKeyboardMarkup:
     """
     Create confirmation keyboard.

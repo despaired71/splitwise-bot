@@ -2,6 +2,7 @@
 
 from bot.handlers import (
     start,
+    admin,
     event,
     participant,
     family,
@@ -11,6 +12,7 @@ from bot.handlers import (
 
 __all__ = [
     "start",
+    "admin",
     "event",
     "participant",
     "family",
