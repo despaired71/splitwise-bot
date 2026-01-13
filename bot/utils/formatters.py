@@ -196,9 +196,9 @@ def format_expense_summary(summary: Dict) -> str:
     if summary['by_category']:
         message += "<b>По категориям:</b>\n"
         for category, amount in sorted(
-                summary['by_category'].items(),
-                key=lambda x: x[1],
-                reverse=True
+            summary['by_category'].items(),
+            key=lambda x: x[1],
+            reverse=True
         ):
             percentage = (amount / summary['total_amount'] * 100) if summary['total_amount'] > 0 else 0
             message += f"  • {category}: {amount:.2f} ₽ ({percentage:.1f}%)\n"
@@ -207,9 +207,9 @@ def format_expense_summary(summary: Dict) -> str:
     if summary['by_participant']:
         message += "<b>Кто сколько платил:</b>\n"
         for participant, amount in sorted(
-                summary['by_participant'].items(),
-                key=lambda x: x[1],
-                reverse=True
+            summary['by_participant'].items(),
+            key=lambda x: x[1],
+            reverse=True
         ):
             percentage = (amount / summary['total_amount'] * 100) if summary['total_amount'] > 0 else 0
             message += f"  • {participant}: {amount:.2f} ₽ ({percentage:.1f}%)\n"
