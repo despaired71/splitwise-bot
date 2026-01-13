@@ -20,9 +20,25 @@ from bot.keyboards.inline import (
     get_participants_keyboard,
     get_expenses_keyboard
 )
-from bot.keyboards.reply import get_cancel_keyboard, get_skip_keyboard, get_main_menu_keyboard
+from bot.keyboards.reply import get_cancel_keyboard, get_skip_keyboard, get_main_menu_keyboard, get_done_keyboard
 
 router = Router()
+
+
+# ===== ОБРАБОТЧИКИ ОТМЕНЫ НА КАЖДОМ ШАГЕ =====
+
+@router.message(ExpenseForm.select_event, F.text == "❌ Отмена")
+@router.message(ExpenseForm.amount, F.text == "❌ Отмена")
+@router.message(ExpenseForm.description, F.text == "❌ Отмена")
+@router.message(ExpenseForm.category, F.text == "❌ Отмена")
+@router.message(ExpenseForm.select_participants, F.text == "❌ Отмена")
+async def cancel_expense_creation(message: Message, state: FSMContext):
+    """Cancel expense creation from any step."""
+    await state.clear()
+    await message.answer(
+        "❌ Добавление расхода отменено",
+        reply_markup=get_main_menu_keyboard()
+    )
 
 
 @router.message(Command("add_expense"))
@@ -34,7 +50,6 @@ async def cmd_add_expense(
         user_id: int
 ):
     """Start adding an expense."""
-    # Get user's active events
     event_service = EventService(session)
     events = await event_service.get_user_events(user_id, include_closed=False)
 
@@ -89,14 +104,6 @@ async def process_expense_amount(
         state: FSMContext
 ):
     """Process expense amount."""
-    if message.text == "❌ Отмена":
-        await state.clear()
-        await message.answer(
-            "❌ Добавление расхода отменено",
-            reply_markup=get_main_menu_keyboard()
-        )
-        return
-
     # Validate amount
     is_valid, amount, error = validate_amount(message.text)
     if not is_valid:
@@ -109,7 +116,8 @@ async def process_expense_amount(
     await message.answer(
         "📝 <b>Описание расхода</b>\n\n"
         "На что потрачены деньги? (например: 'Ужин в ресторане')",
-        parse_mode="HTML"
+        parse_mode="HTML",
+        reply_markup=get_cancel_keyboard()
     )
 
 
@@ -119,14 +127,6 @@ async def process_expense_description(
         state: FSMContext
 ):
     """Process expense description."""
-    if message.text == "❌ Отмена":
-        await state.clear()
-        await message.answer(
-            "❌ Добавление расхода отменено",
-            reply_markup=get_main_menu_keyboard()
-        )
-        return
-
     # Validate description
     is_valid, error = validate_description(message.text)
     if not is_valid:
@@ -145,21 +145,26 @@ async def process_expense_description(
     )
 
 
+@router.message(ExpenseForm.category, F.text == "⏭ Пропустить")
+async def skip_category(message: Message, state: FSMContext):
+    """Skip category selection."""
+    await state.update_data(category=None)
+    await state.set_state(ExpenseForm.split_type)
+
+    await message.answer(
+        "⚖️ <b>Как разделить расход?</b>",
+        reply_markup=get_split_type_keyboard(),
+        parse_mode="HTML"
+    )
+
+
 @router.message(ExpenseForm.category)
 async def process_expense_category(
         message: Message,
         state: FSMContext
 ):
     """Process expense category."""
-    if message.text == "❌ Отмена":
-        await state.clear()
-        await message.answer(
-            "❌ Добавление расхода отменено",
-            reply_markup=get_main_menu_keyboard()
-        )
-        return
-
-    category = None if message.text == "⏭ Пропустить" else message.text.strip()
+    category = message.text.strip()
     await state.update_data(category=category)
     await state.set_state(ExpenseForm.split_type)
 
@@ -190,7 +195,6 @@ async def callback_select_split_type(
         # For equal split, ask who to split among
         await state.set_state(ExpenseForm.select_participants)
 
-        # Get all participants
         participant_service = ParticipantService(session)
         participants = await participant_service.get_event_participants(event_id)
 
@@ -211,10 +215,14 @@ async def callback_select_split_type(
             "Выберите участников:",
             reply_markup=keyboard
         )
+        # Добавляем кнопку "Готово"
+        await callback.message.answer(
+            "После выбора нажмите кнопку ниже:",
+            reply_markup=get_done_keyboard()
+        )
 
     else:
         # For custom/specific splits, we need more complex handling
-        # For now, let's simplify and create with equal split
         await callback.answer(
             "⚠️ Пока поддерживается только равное разделение.\n"
             "Эта функция будет добавлена в следующей версии.",
@@ -316,11 +324,6 @@ async def cmd_my_expenses(
         user_id: int
 ):
     """Show user's expenses."""
-    # Get user's participants across all events
-    participant_service = ParticipantService(session)
-    expense_service = ExpenseService(session)
-
-    # This is simplified - in production you'd want to aggregate properly
     await message.answer(
         "📊 <b>Ваши расходы</b>\n\n"
         "Используйте /list_events чтобы посмотреть расходы по мероприятию",
