@@ -62,6 +62,11 @@ services:
       sh -c "
         echo 'Waiting for database...' &&
         sleep 5 &&
+        echo 'Checking migrations...' &&
+        if [ ! -f alembic/versions/*.py 2>/dev/null ]; then
+          echo 'No migrations found, creating initial migration...' &&
+          alembic revision --autogenerate -m 'initial tables';
+        fi &&
         echo 'Running migrations...' &&
         alembic upgrade head &&
         echo 'Starting bot...' &&
