@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import BigInteger, Boolean, String, Index, UniqueConstraint
+from sqlalchemy import BigInteger, Boolean, String, Index, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bot.database.base import Base, TimestampMixin
@@ -13,7 +13,12 @@ class Participant(Base, TimestampMixin):
     __tablename__ = "participants"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    event_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    event_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("events.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
     user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     username: Mapped[str | None] = mapped_column(String(255), nullable=True)
     display_name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -27,10 +32,7 @@ class Participant(Base, TimestampMixin):
     deleted_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
     # Relationships
-    event: Mapped["Event"] = relationship(
-        back_populates="participants",
-        foreign_keys=[event_id]
-    )
+    event: Mapped["Event"] = relationship(back_populates="participants")
     family_memberships: Mapped[List["FamilyMember"]] = relationship(
         back_populates="participant",
         cascade="all, delete-orphan"
