@@ -9,14 +9,11 @@ alembic==1.14.0
 
 # Utils
 python-dotenv==1.0.1
-pydantic==2.10.4
+pydantic==2.9.2
 pydantic-settings==2.6.1
 
 # Redis for FSM
 redis==5.2.0
-
-# For calculations
-# numpy is optional, using only built-in Decimal
 
 # Development
 pytest==8.3.4

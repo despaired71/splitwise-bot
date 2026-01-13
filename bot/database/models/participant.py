@@ -59,10 +59,11 @@ class Participant(Base, TimestampMixin):
     __table_args__ = (
         Index("idx_event_participant", "event_id", "user_id"),
         Index("idx_participant_active", "event_id", "is_active"),
-        UniqueConstraint(
+        Index(
+            "uq_event_user_active",
             "event_id",
             "user_id",
-            name="uq_event_user",
+            unique=True,
             postgresql_where="user_id IS NOT NULL AND is_active = TRUE"
         ),
     )
