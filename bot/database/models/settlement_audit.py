@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, Boolean, String, Numeric, JSON, func
+from sqlalchemy import BigInteger, Boolean, String, Numeric, JSON, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bot.database.base import Base
@@ -13,9 +13,24 @@ class DebtSettlement(Base):
     __tablename__ = "debt_settlements"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    event_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
-    debtor_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
-    creditor_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    event_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("events.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    debtor_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("participants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    creditor_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("participants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     settled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     settled_at: Mapped[datetime | None] = mapped_column(nullable=True)
@@ -25,10 +40,7 @@ class DebtSettlement(Base):
     )
 
     # Relationships
-    event: Mapped["Event"] = relationship(
-        back_populates="debt_settlements",
-        foreign_keys=[event_id]
-    )
+    event: Mapped["Event"] = relationship(back_populates="debt_settlements")
     debtor: Mapped["Participant"] = relationship(
         back_populates="debts_owed",
         foreign_keys=[debtor_id]
@@ -48,7 +60,12 @@ class AuditLog(Base):
     __tablename__ = "audit_log"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    event_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True, index=True)
+    event_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("events.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True
+    )
     user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     entity_type: Mapped[str] = mapped_column(String(50), nullable=False)
     entity_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
@@ -62,10 +79,7 @@ class AuditLog(Base):
     )
 
     # Relationships
-    event: Mapped["Event"] = relationship(
-        back_populates="audit_logs",
-        foreign_keys=[event_id]
-    )
+    event: Mapped["Event"] = relationship(back_populates="audit_logs")
 
     def __repr__(self) -> str:
         return f"<AuditLog(entity_type='{self.entity_type}', action='{self.action}', entity_id={self.entity_id})>"

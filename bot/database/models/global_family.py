@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import BigInteger, String, Text
+from sqlalchemy import BigInteger, String, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bot.database.base import Base, TimestampMixin
@@ -38,6 +38,7 @@ class GlobalFamilyMember(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     global_family_id: Mapped[int] = mapped_column(
         BigInteger,
+        ForeignKey("global_families.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
@@ -47,10 +48,7 @@ class GlobalFamilyMember(Base, TimestampMixin):
     is_family_head: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     # Relationships
-    family: Mapped["GlobalFamily"] = relationship(
-        back_populates="members",
-        foreign_keys=[global_family_id]
-    )
+    family: Mapped["GlobalFamily"] = relationship(back_populates="members")
 
     def __repr__(self) -> str:
         return f"<GlobalFamilyMember(id={self.id}, name='{self.display_name}')>"

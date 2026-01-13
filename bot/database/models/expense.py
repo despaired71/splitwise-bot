@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List
 
-from sqlalchemy import BigInteger, Boolean, String, Text, Numeric, CheckConstraint, Index
+from sqlalchemy import BigInteger, Boolean, String, Text, Numeric, CheckConstraint, Index, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bot.database.base import Base, TimestampMixin
@@ -14,8 +14,18 @@ class Expense(Base, TimestampMixin):
     __tablename__ = "expenses"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    event_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
-    payer_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    event_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("events.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    payer_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("participants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     category: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -28,14 +38,8 @@ class Expense(Base, TimestampMixin):
     deleted_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
     # Relationships
-    event: Mapped["Event"] = relationship(
-        back_populates="expenses",
-        foreign_keys=[event_id]
-    )
-    payer: Mapped["Participant"] = relationship(
-        back_populates="expenses_paid",
-        foreign_keys=[payer_id]
-    )
+    event: Mapped["Event"] = relationship(back_populates="expenses")
+    payer: Mapped["Participant"] = relationship(back_populates="expenses_paid")
     splits: Mapped[List["ExpenseSplit"]] = relationship(
         back_populates="expense",
         cascade="all, delete-orphan"
@@ -56,13 +60,24 @@ class ExpenseSplit(Base):
     __tablename__ = "expense_splits"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    expense_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    expense_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("expenses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
     participant_id: Mapped[int | None] = mapped_column(
         BigInteger,
+        ForeignKey("participants.id", ondelete="CASCADE"),
         nullable=True,
         index=True
     )
-    family_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True, index=True)
+    family_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("families.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True
+    )
     share_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     share_percentage: Mapped[Decimal | None] = mapped_column(
         Numeric(5, 2),
@@ -70,18 +85,9 @@ class ExpenseSplit(Base):
     )
 
     # Relationships
-    expense: Mapped["Expense"] = relationship(
-        back_populates="splits",
-        foreign_keys=[expense_id]
-    )
-    participant: Mapped["Participant"] = relationship(
-        back_populates="expense_splits",
-        foreign_keys=[participant_id]
-    )
-    family: Mapped["Family"] = relationship(
-        back_populates="expense_splits",
-        foreign_keys=[family_id]
-    )
+    expense: Mapped["Expense"] = relationship(back_populates="splits")
+    participant: Mapped["Participant"] = relationship(back_populates="expense_splits")
+    family: Mapped["Family"] = relationship(back_populates="expense_splits")
 
     __table_args__ = (
         CheckConstraint(

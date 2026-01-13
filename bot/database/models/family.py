@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import BigInteger, String
+from sqlalchemy import BigInteger, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bot.database.base import Base, TimestampMixin
@@ -12,28 +12,29 @@ class Family(Base, TimestampMixin):
     __tablename__ = "families"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    event_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    event_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("events.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
     global_family_id: Mapped[int | None] = mapped_column(
         BigInteger,
+        ForeignKey("global_families.id", ondelete="SET NULL"),
         nullable=True,
         index=True
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    family_head_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    family_head_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("participants.id", ondelete="SET NULL"),
+        nullable=True
+    )
 
     # Relationships
-    event: Mapped["Event"] = relationship(
-        back_populates="families",
-        foreign_keys=[event_id]
-    )
-    global_family: Mapped["GlobalFamily"] = relationship(
-        back_populates="families",
-        foreign_keys=[global_family_id]
-    )
-    family_head: Mapped["Participant"] = relationship(
-        back_populates="families_headed",
-        foreign_keys=[family_head_id]
-    )
+    event: Mapped["Event"] = relationship(back_populates="families")
+    global_family: Mapped["GlobalFamily"] = relationship(back_populates="families")
+    family_head: Mapped["Participant"] = relationship(back_populates="families_headed")
     members: Mapped[List["FamilyMember"]] = relationship(
         back_populates="family",
         cascade="all, delete-orphan"
@@ -53,22 +54,20 @@ class FamilyMember(Base, TimestampMixin):
     __tablename__ = "family_members"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    family_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    participant_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    family_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("families.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    participant_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("participants.id", ondelete="CASCADE"),
+        nullable=False
+    )
 
     # Relationships
-    family: Mapped["Family"] = relationship(
-        back_populates="members",
-        foreign_keys=[family_id]
-    )
-    participant: Mapped["Participant"] = relationship(
-        back_populates="family_memberships",
-        foreign_keys=[participant_id]
-    )
-
-    __table_args__ = (
-        {"sqlite_autoincrement": True},
-    )
+    family: Mapped["Family"] = relationship(back_populates="members")
+    participant: Mapped["Participant"] = relationship(back_populates="family_memberships")
 
     def __repr__(self) -> str:
         return f"<FamilyMember(family_id={self.family_id}, participant_id={self.participant_id})>"
